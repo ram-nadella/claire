@@ -38,6 +38,10 @@ Request.prototype.processRailgunHeader = function () {
     return this.railgunMetaData;
   }
 
+    // TODO: handle new railgun header format
+    // cf-railgun: direct (starting new WAN connection)
+    // issue report: https://github.com/cloudflare/claire/issues/61
+
     // Railgun header can be in one of two formats
     // one of them will have the string "normal"
   var railgunNormal = railgunHeader.indexOf('normal') !== -1;
