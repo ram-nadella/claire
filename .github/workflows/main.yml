@@ -14,5 +14,3 @@ jobs:
         run: yarn install
       - name: Run tests
         run: yarn run test
-      - name: Build files using webpack
-        run: yarn run build
