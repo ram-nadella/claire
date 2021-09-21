@@ -1,0 +1,16 @@
+name: CI
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependecies using yarn
+        run: yarn install
+      - name: Run tests
+        run: yarn run test
