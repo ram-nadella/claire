@@ -1,6 +1,6 @@
 # Claire modernization plan
 
-*Last updated: 2026-11-26. Maintainer: Ram Nadella.*
+*Last updated: 2026-11-27. Maintainer: Ram Nadella.*
 
 This plan gets the repo back in sync with the published extension (v0.21.0, MV3), then hardens it and builds it out in small steps that each leave `master` working. The 0.21.0 code is tiny (about 300 lines of plain JavaScript, with no build step and no dependencies), so most chunks fit in one focused session.
 
@@ -14,9 +14,9 @@ This plan gets the repo back in sync with the published extension (v0.21.0, MV3)
 
 ## Progress
 
-- [ ] **Phase 0: Get back in sync with the store**
+- [x] **Phase 0: Get back in sync with the store**
   - [x] 0.1 Import v0.21.0 as the new codebase
-  - [ ] 0.2 Fork identity cleanup
+  - [x] 0.2 Fork identity cleanup
 - [ ] **Phase 1: Foundation**
   - [x] 1.1 Node 26 + npm + formatting and lint, in the dev container and CI
   - [ ] 1.2 Build tooling decision (no-build vs WXT)
@@ -105,6 +105,8 @@ This plan gets the repo back in sync with the published extension (v0.21.0, MV3)
 - LICENSE: keep the BSD-3 text and all existing copyright notices (the license requires it). Add a line for the maintainer's own copyright on new work. Drop the jQuery and RequireJS/Dojo notices if those libraries no longer ship. Don't use Cloudflare's name in ways that imply endorsement (clause 3).
 
 **Acceptance:** no remaining links send users to `cloudflare/claire` for support, issues or installs.
+
+**Done (2026-11-27):** `README.markdown` → `README.md` and `LICENSE.md` → `LICENSE` (plain text, so GitHub detects BSD-3-Clause). The Firefox badge is gone: AMO's API doesn't return the `cloudflare-claire` listing publicly, so it isn't a live listing to send users to (4.6). `is.gd/claire` still redirects to the store listing, so it stays. The jQuery, RequireJS, Pure, Normalize.css and Octicons notices are gone, since none of them ship in 0.21.0. The maintainer chose not to add a copyright line of their own. The disclaimer's "YAHOO! INC.", copied from Pure's license, now reads "THE COPYRIGHT HOLDER OR CONTRIBUTORS", the standard BSD-3 wording.
 
 ---
 
@@ -343,7 +345,7 @@ When the popup opens on a Cloudflare page, fetch that site's `/cdn-cgi/trace` on
 
 ### 4.6 Firefox build (*decision needed*)
 
-**Question for the maintainer:** ship on Firefox? The README's Firefox badge points to an `addons.mozilla.org/.../cloudflare-claire/` listing that's probably upstream's.
+**Question for the maintainer:** ship on Firefox? The old README's Firefox badge pointed to an `addons.mozilla.org/.../cloudflare-claire/` listing that's probably upstream's and isn't publicly listed anymore; 0.2 removed the badge.
 - It doesn't need separate manifests or a build step. One manifest can carry both `background.service_worker` (Chrome) and `background.scripts` (Firefox): Chrome 121+ ignores `scripts` in MV3, and Firefox 121+ ignores `service_worker`. Raise `minimum_chrome_version` to 121.
 - Firefox needs `browser_specific_settings.gecko.id`. New Firefox listings must also declare `data_collection_permissions` (required since November 2025); Claire would declare `none`.
 - Check each API Claire uses against MDN's compatibility tables. Playwright only loads extensions in Chromium, so test Firefox by hand or with `web-ext run`.
@@ -379,7 +381,7 @@ Cover install (including pinning Claire to the toolbar, see 2.6), development (d
 4. Detection rule: exact `Server: cloudflare`, a prefix match, or also `CF-RAY`? (2.5)
 5. Default icon: the grey cloud, or a new outlined cloud so "unknown" looks different from "not Cloudflare"? (2.6)
 6. Bring back HTTP-version and IPv6 badges on the toolbar icon? (4.3)
-7. Ship on Firefox? Is the AMO listing in the README yours? (4.6)
+7. Ship on Firefox? Was the `cloudflare-claire` AMO listing yours? (4.6)
 
 ---
 
