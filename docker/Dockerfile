@@ -1,23 +1,23 @@
-# Dev environment for Claire: Node toolchain for lint, tests and build, with network access.
+# Dev environment for Claire: Node toolchain for lint, formatting and tests, with network
+# access. The extension itself has no build step; this is for dev tooling only.
 #
-# The current toolchain (webpack 3, jest 20, eslint 3) dates from 2018, so this pins an
-# older Node by default. Bump NODE_VERSION (here and in compose.yaml) when the toolchain
-# is upgraded.
-ARG NODE_VERSION=16
-FROM node:${NODE_VERSION}-bullseye-slim
+# Keep NODE_VERSION in sync with .node-version (compose.yaml passes it in).
+ARG NODE_VERSION=26
+FROM node:${NODE_VERSION}-slim
 
-# yarn v1 ships with the official node images.
 WORKDIR /app
 
 COPY docker/entrypoint.sh /usr/local/bin/claire-entrypoint
 RUN chmod 755 /usr/local/bin/claire-entrypoint \
- && mkdir -p /app/node_modules /home/node/.cache/yarn \
- && chown -R node:node /app /home/node/.cache
+ && mkdir -p /app/node_modules /home/node/.npm \
+ && chown -R node:node /app /home/node/.npm
 
-# Run as the image's non-root user so files written to the bind mount (dist/, yarn.lock)
-# aren't root-owned on Linux hosts. Named volumes inherit this ownership on first use.
+# Run as the image's non-root user so files written to the bind mount (package-lock.json,
+# formatted sources) aren't root-owned on Linux hosts. Named volumes inherit this
+# ownership on first use.
 USER node
-ENV YARN_CACHE_FOLDER=/home/node/.cache/yarn
+# Use the npm that ships with this Node (as CI does), without nagging to upgrade it.
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false
 
 ENTRYPOINT ["claire-entrypoint"]
 CMD ["bash"]

@@ -1,0 +1,4 @@
+# Prose docs are hand-wrapped; Prettier would re-flow and re-pad tables.
+*.md
+*.markdown
+package-lock.json
