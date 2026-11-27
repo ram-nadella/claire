@@ -65,6 +65,8 @@ eslint.config.js           ESLint flat config: browser/webextension globals for 
 .prettierrc.json           Prettier defaults, plus 4-space HTML; .prettierignore skips Markdown
 .node-version              Node major for CI and the dev container (keep docker/compose in sync)
 .github/workflows/ci.yml   lint on every PR and push to master; uploads src/ as an artifact
+.github/dependabot.yml     weekly version-update PRs for npm dev deps and GitHub Actions
+SECURITY.md                how to report a vulnerability privately
 compose.yaml, docker/      dev container (Dockerfile + entrypoint)
 docs/modernization-plan.md the roadmap: ordered, chunked work with acceptance criteria
 CLAUDE.md                  imports this file for Claude Code
@@ -102,6 +104,7 @@ Detection rules:
 - ESLint doesn't read `.gitignore`. If you add a gitignored output folder, add it to `globalIgnores` in `eslint.config.js` too.
 - `no-unused-vars` ignores top-level declarations in `src/` for now (`vars: "local"`), because `popup.js` has unused leftovers that chunk 2.3 removes. Restore the default once they're gone.
 - Don't push, tag, or publish to a store unless explicitly asked.
+- Most security tooling lives in the repo's security settings, not in files: Dependabot alerts and security updates, CodeQL code scanning (*default setup*, which covers `src/` and the workflows), secret scanning with push protection, and private vulnerability reporting. Don't add a `codeql.yml` workflow: GitHub rejects advanced-setup results while default setup is on. Dependabot's PRs are titled `chore(deps): ...` and `ci(deps): ...`.
 
 ## Manual check (for a human)
 

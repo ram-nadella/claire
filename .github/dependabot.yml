@@ -1,0 +1,35 @@
+# Dependabot version updates. Alerts and security updates are turned on in the
+# repo's security settings; this file only schedules routine version bumps.
+#
+# The dev container's Node major is pinned on purpose (.node-version, compose.yaml,
+# docker/Dockerfile), so the docker ecosystem isn't listed.
+version: 2
+updates:
+  # Dev tooling only (ESLint, Prettier); the extension has no runtime dependencies.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # Wait a week after a release before proposing it. Security updates ignore this.
+    cooldown:
+      default-days: 7
+    groups:
+      # One PR for minor and patch bumps; majors still get a PR each.
+      dev-tooling:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci
+      include: scope

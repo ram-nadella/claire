@@ -370,7 +370,7 @@ Cover install (including pinning Claire to the toolbar, see 2.6), development (d
 
 ## Ongoing
 
-- Turn on Dependabot (npm + GitHub Actions) once 1.1 lands.
+- Security tooling is on as of 2026-11-27: Dependabot alerts and security updates, weekly grouped version updates with a 7-day cooldown (`.github/dependabot.yml`), CodeQL default setup, secret scanning with push protection, and private vulnerability reporting (`SECURITY.md`). Triage Dependabot PRs and code scanning alerts as they come in.
 - Keep AGENTS.md's command table and conventions in sync with each chunk.
 
 ## Open questions for the maintainer
