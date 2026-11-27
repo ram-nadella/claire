@@ -1,29 +1,29 @@
 # Dev container for Claire (has outbound network access via the default compose network).
 #
-#   docker compose run --rm dev yarn test        # lint + unit tests
-#   docker compose run --rm dev yarn build       # build the unpacked extension into dist/
-#   docker compose run --rm dev                  # interactive shell
-#   docker compose run --rm -T dev yarn test     # non-interactive (agents, scripts): -T = no TTY
+#   docker compose run --rm dev npm run lint        # ESLint + Prettier check
+#   docker compose run --rm dev npm run format      # apply Prettier and ESLint fixes
+#   docker compose run --rm dev                     # interactive shell
+#   docker compose run --rm -T dev npm run lint     # non-interactive (agents, scripts): -T = no TTY
 #
-# The repo is bind-mounted at /app, so edits on the host are seen immediately and dist/
-# lands on the host. node_modules lives in a named volume so the Linux install never mixes
-# with a macOS one. Reset it with: docker compose down -v
+# The repo is bind-mounted at /app, so edits on the host are seen immediately.
+# node_modules lives in a named volume so the Linux install never mixes with a macOS one.
+# Reset it with: docker compose down -v. After editing docker/, run: docker compose build
 services:
   dev:
     build:
       context: .
       dockerfile: docker/Dockerfile
       args:
-        NODE_VERSION: "16"
-    image: claire-dev:node16
+        NODE_VERSION: "26" # keep in sync with .node-version
+    image: claire-dev:node26
     working_dir: /app
     volumes:
       - .:/app
       - node_modules:/app/node_modules
-      - yarn-cache:/home/node/.cache/yarn
+      - npm-cache:/home/node/.npm
     stdin_open: true
     tty: true
 
 volumes:
   node_modules:
-  yarn-cache:
+  npm-cache:

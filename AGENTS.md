@@ -32,20 +32,26 @@ Guidance for AI coding agents (and humans) working on this repo. Keep it current
 - **It has known bugs**, listed in Phase 2 of the plan (stale per-tab state, popup crashes, debug logging always on, no `http://` host permission, an invisible default icon). Fix each one only in its chunk, with a test.
 - **Work follows [`docs/modernization-plan.md`](docs/modernization-plan.md).** See "Roadmap" below.
 - **The old Manifest V2 code (v0.11.1)** is at tag `v0.11.1`: webpack, jest, `airports.js`, Railgun. Current Chrome can't run it. Look there for old behavior or tests to port; don't restore it.
-- **There's no lint, test or CI yet.** Chunk 1.1 adds Node 26, npm, Prettier, ESLint and CI. Chunk 1.4 adds unit tests and 1.5 an end-to-end test.
+- **Lint and CI exist; tests don't yet.** `npm run lint` runs ESLint and Prettier, in the dev container and in CI. Chunk 1.4 adds unit tests and 1.5 an end-to-end test.
 
 ## Commands
 
-There's no `package.json` yet, so there's nothing to install, lint or build. Chunk 1.1 adds Node 26 + npm tooling; update this section when it lands.
+Node 26 (`.node-version`) and **npm**, for dev tooling only: the extension has no runtime dependencies and no build step. Don't add Yarn or pnpm files.
 
-**Run commands in the dev container** (`compose.yaml` + `docker/`), not on the host. It has network access and its own `node_modules` volume. Pass `-T` when running without a terminal (agents, scripts).
+**Run commands in the dev container** (`compose.yaml` + `docker/`), not on the host. It has network access, Node 26, and its own `node_modules` volume. Dependencies install automatically (`npm ci`) on the first run and whenever `package.json` or `package-lock.json` changes. Pass `-T` when running without a terminal (agents, scripts).
 
 | Task | Command |
 |---|---|
+| Lint (ESLint + Prettier check) | `docker compose run --rm -T dev npm run lint` |
+| Format (Prettier, then ESLint fixes) | `docker compose run --rm -T dev npm run format` |
+| Lint one file | `docker compose run --rm -T dev npx eslint src/popup.js` |
+| Add a dev dependency | `docker compose run --rm -T dev npm install -D <pkg>` (commit `package.json` and `package-lock.json`) |
 | Shell | `docker compose run --rm dev` |
 | Rebuild image (after editing `docker/`) / reset volumes | `docker compose build` / `docker compose down -v` |
 
-**Definition of done (until 1.1):** the manual check below passes. If you couldn't run something, say so. Don't claim it passed.
+If you edited `package.json` by hand and `npm ci` fails, run `docker compose run --rm -T -e SKIP_INSTALL=1 dev npm install` to update the lockfile.
+
+**Definition of done:** `npm run lint` passes. If you touched anything in `src/`, also do the manual check below. If you couldn't run something, say so. Don't claim it passed.
 
 ## Layout
 
@@ -55,6 +61,11 @@ src/                       the extension; load this folder unpacked. Everything 
   background.js            service worker: webRequest/webNavigation listeners, per-tab state, toolbar icon
   popup.html, popup.js     popup UI
   icons/                   cloud-{orange,grey,white}-{32,64,128}px.png
+package.json               dev tooling only (private, no runtime dependencies); scripts: lint, format
+eslint.config.js           ESLint flat config: browser/webextension globals for src/, Node for tooling
+.prettierrc.json           Prettier defaults, plus 4-space HTML; .prettierignore skips Markdown
+.node-version              Node major for CI and the dev container (keep docker/compose in sync)
+.github/workflows/ci.yml   lint on every PR and push to master; uploads src/ as an artifact
 compose.yaml, docker/      dev container (Dockerfile + entrypoint)
 docs/modernization-plan.md the roadmap: ordered, chunked work with acceptance criteria
 CLAUDE.md                  imports this file for Claude Code
@@ -77,7 +88,7 @@ Detection rules:
 
 ## Conventions
 
-- **Style:** 2-space indent, double quotes, semicolons and trailing commas (Prettier's defaults); `popup.html` uses 4 spaces. Plain scripts, not modules, until chunk 1.4: `const`/`let`, arrow functions, `async`/`await`. Match the surrounding code.
+- **Style:** Prettier's defaults (2-space indent, double quotes, semicolons, trailing commas), with 4 spaces in HTML. Prettier and ESLint enforce it; `npm run format` fixes most problems. Markdown is hand-formatted. Plain scripts, not modules, until chunk 1.4: `const`/`let`, arrow functions, `async`/`await`.
 - **No build step.** What's in `src/` is what ships, so keep tests, fixtures and docs out of it.
 - **Service worker:** register listeners synchronously at the top level, and don't keep state in globals. Chrome stops the worker when it's idle, so state lives in `chrome.storage`.
 - **Commits:** conventional style: `fix: ...`, `chore: ...`, `test: ...`, `fix(popup): ...`. One logical change per commit/PR.
@@ -89,6 +100,8 @@ Detection rules:
 - No remote code or CDN assets. MV3's extension CSP is `script-src 'self'`, so the popup can't use inline scripts or inline event handlers either.
 - `host_permissions` lists `https://*/*` twice and has no `http://` pattern, so plain-HTTP sites get no icon. That's a known bug (chunk 2.4). Don't add permissions without stating why in the PR.
 - The dev container's entrypoint is copied into the image, so run `docker compose build` after editing anything in `docker/`.
+- ESLint doesn't read `.gitignore`. If you add a gitignored output folder, add it to `globalIgnores` in `eslint.config.js` too.
+- `no-unused-vars` ignores top-level declarations in `src/` for now (`vars: "local"`), because `popup.js` has unused leftovers that chunk 2.3 removes. Restore the default once they're gone.
 - Don't push, tag, or publish to a store unless explicitly asked.
 
 ## Manual check (for a human)

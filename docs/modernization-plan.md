@@ -18,7 +18,7 @@ This plan gets the repo back in sync with the published extension (v0.21.0, MV3)
   - [x] 0.1 Import v0.21.0 as the new codebase
   - [ ] 0.2 Fork identity cleanup
 - [ ] **Phase 1: Foundation**
-  - [ ] 1.1 Node 26 + npm + formatting and lint, in the dev container and CI
+  - [x] 1.1 Node 26 + npm + formatting and lint, in the dev container and CI
   - [ ] 1.2 Build tooling decision (no-build vs WXT)
   - [ ] 1.3 Release workflow (store zip built from a tag)
   - [ ] 1.4 Shared ES module + unit tests
@@ -116,7 +116,7 @@ This plan gets the repo back in sync with the published extension (v0.21.0, MV3)
 1. Add a dev-only `package.json` (`"private": true`, no runtime dependencies), `package-lock.json`, `.node-version` (26), and `engines`.
 2. Switch the dev container to `node:26-slim`, with the entrypoint running `npm ci` (replacing 0.1's stopgap).
 3. Add Prettier (matching the existing style, so the first run changes little or nothing) and an ESLint flat config with browser + `chrome` globals. Scripts: `npm run lint`, `npm run format`.
-4. Add a GitHub Actions workflow (`actions/checkout@v4` and `actions/setup-node`, Node 26, npm cache) that runs lint and uploads a zip of `src/` as an artifact.
+4. Add a GitHub Actions workflow (current majors of `actions/checkout` and `actions/setup-node`, Node from `.node-version`, npm cache) that runs lint and uploads a zip of `src/` as an artifact.
 
 **Acceptance:** `docker compose run --rm -T dev npm run lint` passes, and CI is green on a PR. The extension files are untouched apart from formatting.
 
