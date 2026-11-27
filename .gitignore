@@ -1,3 +1,5 @@
 dist/
 node_modules/
 coverage/
+# Store packages (downloaded .crx files); never commit
+*.crx

@@ -1,0 +1,3 @@
+# The image only needs docker/; the source is bind-mounted at runtime.
+*
+!docker/
