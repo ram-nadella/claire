@@ -23,8 +23,7 @@ Guidance for AI coding agents (and humans) working on this repo. Keep it current
   - Don't suggest Cloudflare Optics as an alternative.
   - Upstream commits in `git log` are just history.
 - **Sources of truth:** this repo, and the Chrome Web Store listing `fgbpcgddpmjmamlibbaobboigaijnmkl`, which the maintainer publishes.
-- **Leftover upstream references** (README links and badges) are stale. Cleaning them up is chunk 0.2 in the plan.
-- **License:** keep the BSD-3 license text and its existing copyright notices; the license requires them. Don't use Cloudflare's name in a way that implies endorsement.
+- **License:** `LICENSE` is the standard BSD-3 text with Cloudflare's original copyright line. Keep it, since the license requires it, and don't add copyright lines (the maintainer's included) unless the maintainer asks. Nothing third-party ships, so there are no third-party notices: if you ever copy a library into `src/`, add its notice. Don't use Cloudflare's name in a way that implies endorsement.
 
 ## Read this first: current state
 
