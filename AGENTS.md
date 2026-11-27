@@ -4,14 +4,14 @@ Guidance for AI coding agents (and humans) working on this repo. Keep it current
 
 ## What this is
 
-**Claire** is a browser extension. Its page-action icon turns **orange** when the current page was served by Cloudflare and **grey** when it wasn't. The icon also shows whether the page came over HTTP/2 and IPv6. Clicking it opens a popup with:
+**Claire** is a Chrome extension (Manifest V3). Its toolbar icon turns **orange** when the current page was served by Cloudflare and **grey** when it wasn't. Clicking it opens a popup with:
 
-- the server IP (v4 or v6), with a copy button
-- the Cloudflare **Ray ID** and the **data center** (colo) that served the request, e.g. "San Francisco, United States (SFO)"
-- a link to the site's `/cdn-cgi/trace`
-- Railgun details (legacy; see "Read this first")
+- whether the site uses Cloudflare
+- the HTTP version (`h2`, `h3`, `http/1.1`) and IP version (4 or 6)
+- the server IP
+- for Cloudflare sites: the **Ray ID**, the **data center** code (e.g. `SFO`) and a link to the site's `/cdn-cgi/trace`
 
-`origin` is `ram-nadella/claire` and the default branch is `master`. The version number lives only in `source/manifest.json` (currently 0.11.1).
+`origin` is `ram-nadella/claire` and the default branch is `master`. The version number lives only in `src/manifest.json` (currently 0.21.0).
 
 ## Project status: an independently maintained fork
 
@@ -23,119 +23,84 @@ Guidance for AI coding agents (and humans) working on this repo. Keep it current
   - Don't suggest Cloudflare Optics as an alternative.
   - Upstream commits in `git log` are just history.
 - **Sources of truth:** this repo, and the Chrome Web Store listing `fgbpcgddpmjmamlibbaobboigaijnmkl`, which the maintainer publishes.
-- **Leftover upstream references** (`package.json` repository/bugs/homepage, README links and badges) are stale. Cleaning them up is chunk 0.2 in the plan.
+- **Leftover upstream references** (README links and badges) are stale. Cleaning them up is chunk 0.2 in the plan.
 - **License:** keep the BSD-3 license text and its existing copyright notices; the license requires them. Don't use Cloudflare's name in a way that implies endorsement.
 
 ## Read this first: current state
 
-- **This repo is behind the published extension.** The Chrome Web Store has **v0.21.0** (updated July 2024), which must be Manifest V3 because the store removed all MV2 extensions in Aug 2026. This repo's `master` is **v0.11.1, Manifest V2**. The 0.21.0 source isn't on any branch of `ram-nadella/claire`: `origin/manifest-v3-update`, despite its name, is one 2021 comment-only commit on top of 0.11.1. The published package, `claire-0-21-0.crx` in the repo root (gitignored; never commit it), turned out to be unbundled plain JS: an MV3 rewrite with no build step and no dependencies. Importing it as the new codebase is chunk 0.1 of the plan, and the plan's appendix summarizes how it differs from 0.11.1. **Don't modernize or fix the MV2 code in `source/`:** it gets replaced in 0.1. Most of this file (*Layout*, *How it works*, *Commands*) still describes that MV2 code and gets rewritten in 0.1.
+- **`src/` is v0.21.0 exactly as published** on the Chrome Web Store, imported from the store package in plan chunk 0.1. The only change is the store-injected `update_url` key, which was removed. It's plain JavaScript with no build step and no dependencies.
+- **It has known bugs**, listed in Phase 2 of the plan (stale per-tab state, popup crashes, debug logging always on, no `http://` host permission, an invisible default icon). Fix each one only in its chunk, with a test.
 - **Work follows [`docs/modernization-plan.md`](docs/modernization-plan.md).** See "Roadmap" below.
-- **The code in this repo won't run in current Chrome.** Chrome 139+ removed MV2 support entirely (unpacked builds included). Until the MV3 source is back, Firefox (which kept MV2) is the practical way to try a build: `about:debugging` → *Load Temporary Add-on* → `dist/manifest.json`.
-- **The toolchain dates from 2017–2018:** webpack 3, jest 20, eslint 3, extract-text-webpack-plugin. The dev container pins Node 16 for that reason. If webpack fails with `ERR_OSSL_EVP_UNSUPPORTED` on a newer Node, retry with `NODE_OPTIONS=--openssl-legacy-provider`.
-- **CI is broken.** `.github/workflows/main.yml` uses `actions/cache@v2` (GitHub retired it in 2025) and the deprecated `::set-output`. `.travis.yml` is dead.
-- **Railgun is dead upstream.** Cloudflare shut Railgun down on 2024-01-31. The Railgun code is harmless, but don't extend it.
+- **The old Manifest V2 code (v0.11.1)** is at tag `v0.11.1`: webpack, jest, `airports.js`, Railgun. Current Chrome can't run it. Look there for old behavior or tests to port; don't restore it.
+- **There's no lint, test or CI yet.** Chunk 1.1 adds Node 26, npm, Prettier, ESLint and CI. Chunk 1.4 adds unit tests and 1.5 an end-to-end test.
 
 ## Commands
 
-Package manager: **yarn v1** for now (`yarn.lock` is committed; don't add a `package-lock.json`). Plan chunk 1.1 moves to Node 26 + npm; update this section when it lands.
+There's no `package.json` yet, so there's nothing to install, lint or build. Chunk 1.1 adds Node 26 + npm tooling; update this section when it lands.
 
-**Run everything in the dev container** (`compose.yaml` + `docker/`). It has network access, a pinned Node, and its own `node_modules` volume, so nothing depends on what's installed on the host. Dependencies install automatically on the first run and whenever `package.json` or `yarn.lock` changes. Pass `-T` when running without a terminal (agents, scripts).
+**Run commands in the dev container** (`compose.yaml` + `docker/`), not on the host. It has network access and its own `node_modules` volume. Pass `-T` when running without a terminal (agents, scripts).
 
 | Task | Command |
 |---|---|
-| Lint + all tests | `docker compose run --rm -T dev yarn test` (eslint on `source/` excluding `airports.js`, then jest) |
-| One test file | `docker compose run --rm -T dev npx jest source/request.test.js` |
-| Lint one file | `docker compose run --rm -T dev npx eslint source/request.js` |
-| Build | `docker compose run --rm -T dev yarn build` → `dist/` on the host (unpacked extension) |
-| Add a dependency | `docker compose run --rm -T dev yarn add -D <pkg>` (commit both `package.json` and `yarn.lock`) |
 | Shell | `docker compose run --rm dev` |
-| Rebuild image / reset deps | `docker compose build` / `docker compose down -v` |
+| Rebuild image (after editing `docker/`) / reset volumes | `docker compose build` / `docker compose down -v` |
 
-If you edited `package.json` by hand and `--frozen-lockfile` install fails, run `docker compose run --rm -T -e SKIP_INSTALL=1 dev yarn install` to update the lockfile.
-
-Definition of done: `yarn test` passes. If you touched `manifest.json`, HTML, images or `webpack.config.js`, also run `yarn build` and check that every file `manifest.json` references exists in `dist/`. If you couldn't run a command (no network for `yarn install`, for example), say so. Don't claim it passed.
+**Definition of done (until 1.1):** the manual check below passes. If you couldn't run something, say so. Don't claim it passed.
 
 ## Layout
 
 ```
-source/
-  manifest.json            MV2 manifest (copied to dist/ as-is)
-  claire.js                background page (AMD define), event wiring, per-tab state
-  request.js               Request class: all header parsing / detection logic  <- most changes go here
-  request.test.js          unit tests for Request
-  contentscript.js         runs at document_start, reports nextHopProtocol
-  page-action-popup.html/.js   popup UI
-  options.html/.js         options page (2 checkboxes)
-  options.test.js          jsdom test for options
-  style.css                shared styles (bundled with purecss + octicons)
-  airports.js              ~1 MB, single line: IATA code -> {city, country, ...} (OpenFlights data)
-  images/                  icon variants (see "Icon naming")
-resources/chrome-promo/    Web Store promo art (not shipped)
-webpack.config.js          4 entries: background, contentscript, options, popup -> dist/[name].js/.css
-compose.yaml, docker/      dev container (Dockerfile + entrypoint that auto-installs deps)
+src/                       the extension; load this folder unpacked. Everything in it ships.
+  manifest.json            MV3 manifest
+  background.js            service worker: webRequest/webNavigation listeners, per-tab state, toolbar icon
+  popup.html, popup.js     popup UI
+  icons/                   cloud-{orange,grey,white}-{32,64,128}px.png
+compose.yaml, docker/      dev container (Dockerfile + entrypoint)
 docs/modernization-plan.md the roadmap: ordered, chunked work with acceptance criteria
 CLAUDE.md                  imports this file for Claude Code
 ```
 
 ## How it works
 
-1. **Capture.** `claire.js` listens to `chrome.webRequest.onCompleted` for `main_frame` requests with `responseHeaders`. It builds a `new Request(details)` and stores it in `window.requests[tabId]`, and it cleans up on `tabs.onRemoved` and `tabs.onReplaced`.
-2. **Protocol.** `contentscript.js` reads `performance.getEntriesByType('navigation')[0].nextHopProtocol` (`'h2'`, `'h3'`, `'http/1.1'`) and sends `{type}` to the background, which calls `request.setConnectionInfo()`.
-3. **Icon.** On `webNavigation.onDOMContentLoaded` (top frame only, skipped when `details.fromCache`), the background calls `request.queryConnectionInfoAndSetIcon()`. That asks the content script (`{action: 'check_connection_info'}`) if it doesn't have protocol info yet, then calls `setPageActionIconAndPopup()`.
-4. **Popup.** `page-action-popup.js` gets the background page via `chrome.extension.getBackgroundPage()`, reads `requests[activeTabId]`, and fills the DOM from `Request` getters. It hides the Ray, location, actions and Railgun cards when they don't apply.
-5. **Options.** These are stored as `localStorage` flags with `'yes'`/`'no'` values: `debug_logging` (read by `Request.logToConsole`) and `hide_guide` (read by the popup). The options page, the popup and the background share one `localStorage` because they share the extension origin.
+1. **Capture.** `background.js` listens to `chrome.webRequest.onCompleted` for `main_frame` requests with `responseHeaders`. It builds a `RequestInfo` (tab ID, request ID, URL, IP, `Server` and `CF-RAY` values, `servedByCloudflare`) and stores it in `chrome.storage.local` under `tab-request-details-<tabId>`.
+2. **Icon.** It then calls `chrome.action.setIcon({ path, tabId })`: orange if Cloudflare, grey if not. The manifest's default icon is the white cloud. On `webNavigation.onDOMContentLoaded` (only when `frameId === 0`), it reads the tab's stored entry and sets the icon again, for navigations that don't produce a fresh `webRequest` event.
+3. **Cleanup.** `tabs.onRemoved` deletes the tab's entry; `tabs.onReplaced` moves it to the new tab ID.
+4. **Popup.** `popup.js` finds the active tab, reads its entry from `chrome.storage.local`, and fills in the page. For the HTTP version it runs `chrome.scripting.executeScript` in the tab to read `performance.getEntriesByType('navigation')[0].nextHopProtocol`.
+5. **Debug logging.** `debug_log` prints to the service worker console when `chrome.storage.local` has `debug: true`. `background.js` sets that on every start (a bug; chunk 2.2).
 
-Detection rules (in `request.js`):
+Detection rules:
 
-- **Cloudflare:** the `Server` header matches `/^cloudflare/i`.
-- **Ray ID / colo:** the `CF-RAY` header has the form `<rayid>-<IATA>`. The colo code is looked up in `airports.js`, and the code itself is shown if the lookup fails.
-- **IPv6:** `details.ip` contains `:`.
-- **H2:** `connectionType === 'h2'`.
-- Header names are **upper-cased** into `request.headers`. Duplicate header names collapse to the last value.
-
-### Icon naming
-
-The icon is chosen purely by file name in `Request.getImagePath()`:
-
-```
-images/claire-3-{on|off}[-h2][-ipv6][-rg].png  (+ @2x.png)   page-action icon, 19/38px
-images/claire-3-popup-{on|off}[-h2][-ipv6][-rg].png          popup "guide" image (no @2x)
-```
-
-Suffix order is fixed: `h2`, then `ipv6`, then `rg`. `off-*-rg` files don't exist, because Railgun implies Cloudflare. Adding a new flag (e.g. `h3`) means creating every combination for both sets (plus `@2x`) or changing the scheme. Never produce a name that has no file.
+- **Cloudflare:** the `Server` header equals `cloudflare`, ignoring case. (Chunk 2.5 revisits this.)
+- **Ray ID / data center:** `CF-RAY` is split on `-` into `<rayid>-<colo>`. The colo is shown as a code.
+- **IP version:** the IP contains `.` → 4, `:` → 6, otherwise `?`.
+- **Header lookup** ignores case; the first matching header wins.
 
 ## Conventions
 
-- **Style:** xo-space via eslint, i.e. 2-space indent, single quotes, semicolons. Source uses ES5-style `var` + prototype methods (some `let`, and arrow functions in tests). Match the surrounding code. Don't introduce ESM `import`/`export`, classes or newer syntax unless you are deliberately upgrading the toolchain in the same change.
-- **Modules:** CommonJS (`require` / `module.exports`). `claire.js` uses AMD `define`, which webpack resolves too.
-- **`if (require.main === module)` guard** (options.js, page-action-popup.js): code inside runs only in the webpack bundle, never under jest. CSS `require`s live inside this guard so tests don't need loaders. Keep that pattern.
-- **Keep logic testable.** Put detection and parsing in `Request` methods that only read `this.details` and `this.headers`. Keep `chrome.*` calls in `claire.js`, the popup, and the two existing icon/message methods.
-- **Tests:** jest 20 with the default **jsdom** environment. The `chrome` global is **not** mocked, so stub `global.chrome` in the test if you must exercise those paths. Build fake inputs the way the existing tests do: `{responseHeaders: [{name, value}], ip, url, tabId, fromCache}`. Every behavior change to `Request` needs a test.
-- **Commits:** conventional style, as in history: `fix: ...`, `chore: ...`, `test: ...`, `fix(request): ...`. One logical change per commit/PR.
-- **Version bumps** go in `source/manifest.json` only.
+- **Style:** 2-space indent, double quotes, semicolons and trailing commas (Prettier's defaults); `popup.html` uses 4 spaces. Plain scripts, not modules, until chunk 1.4: `const`/`let`, arrow functions, `async`/`await`. Match the surrounding code.
+- **No build step.** What's in `src/` is what ships, so keep tests, fixtures and docs out of it.
+- **Service worker:** register listeners synchronously at the top level, and don't keep state in globals. Chrome stops the worker when it's idle, so state lives in `chrome.storage`.
+- **Commits:** conventional style: `fix: ...`, `chore: ...`, `test: ...`, `fix(popup): ...`. One logical change per commit/PR.
+- **Version bumps** go in `src/manifest.json` only.
 
 ## Gotchas and don'ts
 
-- **Never `cat` or open `source/airports.js`** (it's being replaced in plan Phase 3). It's ~1 MB on one line and will flood your context. To look up an entry: `grep -o '"SFO":{[^}]*}' source/airports.js`.
-- Don't commit `dist/`, `node_modules/` or `coverage/` (all gitignored).
-- No remote code or CDN assets. CSP is `script-src 'self'` (MV3 forbids remote code anyway). CSS and fonts are bundled by webpack, and inlined under 10 KB via url-loader.
-- `manifest.json` → `page_action.default_popup` is `"popup.html"`, but the build ships `page-action-popup.html`. It only works because `setPopup()` overrides it at runtime. Keep the two consistent if you touch either.
-- `browser_style` in the manifest is a Firefox-only key.
-- Don't add permissions without stating why in the PR. Host access is already `http://*/` + `https://*/`.
+- Don't commit `*.crx` store packages, `dist/`, `node_modules/` or `coverage/` (all gitignored).
+- No remote code or CDN assets. MV3's extension CSP is `script-src 'self'`, so the popup can't use inline scripts or inline event handlers either.
+- `host_permissions` lists `https://*/*` twice and has no `http://` pattern, so plain-HTTP sites get no icon. That's a known bug (chunk 2.4). Don't add permissions without stating why in the PR.
+- The dev container's entrypoint is copied into the image, so run `docker compose build` after editing anything in `docker/`.
 - Don't push, tag, or publish to a store unless explicitly asked.
 
-## Manual check (for a human, after `yarn build`)
+## Manual check (for a human)
 
-Load `dist/` unpacked (Firefox for now, Chrome after the MV3 migration), then:
+In Chrome, open `chrome://extensions`, turn on *Developer mode*, choose *Load unpacked* and pick `src/`. Pin Claire from the extensions menu so its icon shows in the toolbar. Then:
 
-- `https://www.cloudflare.com` → orange icon. The popup shows the IP, a Ray ID, a colo city, and a Trace link that opens `/cdn-cgi/trace`.
-- `https://www.google.com` → grey icon. The popup shows only the IP.
-- An IPv6-reachable Cloudflare site (if your network has v6) → icon with the ipv6 badge.
-- Options page: toggling "Hide Claire's icon guide" hides the image at the top of the popup.
+- `https://www.cloudflare.com` → orange icon. The popup says the site uses Cloudflare and shows the HTTP version, IP version, IP, Ray ID, data center code, and a Trace link that opens `/cdn-cgi/trace`.
+- `https://www.google.com` → grey icon. The popup says the site doesn't use Cloudflare and shows the HTTP version, IP version and IP.
 
 ## Roadmap: how to pick up work
 
-All planned work lives in [`docs/modernization-plan.md`](docs/modernization-plan.md), as ordered chunks with acceptance criteria. Known bugs in 0.21.0 are listed in Phase 2; don't fix them during the 0.1 import.
+All planned work lives in [`docs/modernization-plan.md`](docs/modernization-plan.md), as ordered chunks with acceptance criteria. Known bugs in 0.21.0 are listed in Phase 2.
 
 1. Take the first unchecked chunk whose dependencies are done, unless the maintainer names a different one.
 2. Branch `modernize/<id>-<slug>`, and do only that chunk. Ideas and bugs you find along the way go into the plan, not into this PR.
