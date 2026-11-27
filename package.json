@@ -24,7 +24,7 @@
     "webpack": "^3.0.0"
   },
   "scripts": {
-    "build": "rimraf dist && webpack && cp -R source/{manifest.json,page-action-popup.html,options.html,images} dist/",
+    "build": "rimraf dist && webpack && cp -R source/manifest.json source/page-action-popup.html source/options.html source/images dist/",
     "test": "eslint --format=node_modules/eslint-formatter-pretty --ignore-pattern source/airports.js source && jest"
   },
   "repository": {
