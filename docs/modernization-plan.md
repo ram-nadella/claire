@@ -15,7 +15,7 @@ This plan gets the repo back in sync with the published extension (v0.21.0, MV3)
 ## Progress
 
 - [ ] **Phase 0: Get back in sync with the store**
-  - [ ] 0.1 Import v0.21.0 as the new codebase
+  - [x] 0.1 Import v0.21.0 as the new codebase
   - [ ] 0.2 Fork identity cleanup
 - [ ] **Phase 1: Foundation**
   - [ ] 1.1 Node 26 + npm + formatting and lint, in the dev container and CI

@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+    <head>
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Claire</title>
+        <style>
+            html {
+                min-height: 5em;
+                min-width: 20em;
+                color: #333;
+                text-align: center;
+            }
+            body {
+                font-size: 1em;
+            }
+            /* #usingCloudflare {
+                display: none;
+            }
+            #notUsingCloudflare {
+                display: none;
+            } */
+            #httpVersion {
+            }
+            #ipVersion {
+            }
+            #cloudflareOrNot {
+                border-bottom: 2px solid #ccc;
+                margin-bottom: 12px;
+            }
+            #moreInfo {
+                text-align: left;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            <div id="cloudflareOrNot">
+                <img id="orangeCloud" src="icons/cloud-orange-128px.png" />
+                <img id="greyCloud" src="icons/cloud-grey-128px.png" />
+                <p id="usingCloudflare">This website is using Cloudflare</p>
+                <p id="notUsingCloudflare">
+                    This website is not using Cloudflare
+                </p>
+            </div>
+            <div id="moreInfo">
+                <div>HTTP Version: <span id="httpProtocolVersion"></span></div>
+                <div>IP Version: <span id="ipVersion"></span></div>
+                <div id="additionalWebsiteInfo"></div>
+                <div id="cloudflareInfo"></div>
+            </div>
+        </div>
+        <script src="popup.js"></script>
+    </body>
+</html>
